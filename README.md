@@ -1,8 +1,14 @@
-Para criar um novo serviço:
+## Create new project
 
-1. Criar repo a partir do template
-2. Renomear pasta
-3. Rodar:
+Click:
+
+Use this template
+
+Then:
+
+git clone <new-repo>
+
+Build:
 
 conan install . --output-folder=build --build=missing
 cmake -B build
