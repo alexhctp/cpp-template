@@ -79,4 +79,3 @@ pipeline {
         success { echo "Pipeline concluída com sucesso! 🚀" }
         failure { echo "Pipeline falhou. Verifique os logs. ❌" }
     }
-}
