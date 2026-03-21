@@ -1,20 +1,20 @@
 FROM ubuntu:24.04
 
 # -----------------------------
-# Dependências de build
+# Dependências de runtime (não build!)
 # -----------------------------
 RUN apt-get update && \
     apt-get install -y \
-    build-essential \
-    cmake \
-    libfmt-dev \
-    libgtest-dev && \
+    libstdc++6 \
+    libfmt-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # -----------------------------
-# Nome do executável (customizável)
+# Argumentos
 # -----------------------------
+ARG BUILD_DIR
 ARG APP_NAME=app
+
 ENV APP_NAME=${APP_NAME}
 
 # -----------------------------
@@ -23,20 +23,16 @@ ENV APP_NAME=${APP_NAME}
 WORKDIR /app
 
 # -----------------------------
-# Copiar código
+# Copiar binário já buildado
 # -----------------------------
-COPY . .
+COPY ${BUILD_DIR}/ /app/
 
 # -----------------------------
-# Build
+# Permissão (caso necessário)
 # -----------------------------
-RUN rm -rf build && \
-    mkdir build && \
-    cd build && \
-    cmake .. && \
-    make
+RUN chmod +x /app/${APP_NAME} || true
 
 # -----------------------------
 # Execução
 # -----------------------------
-CMD ["sh", "-c", "./build/${APP_NAME}"]
+CMD ["sh", "-c", "./${APP_NAME}"]

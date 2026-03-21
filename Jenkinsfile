@@ -1,4 +1,5 @@
 pipeline {
+    pipeline {
     agent { label 'cpp-agent' }
 
     // =============================
@@ -13,19 +14,19 @@ pipeline {
     }
 
     environment {
-        // Usar credenciais do Jenkins (mais seguro que hardcode)
-        NEXUS_CREDENTIALS = credentials('nexus-cred') // Criar credencial no Jenkins com user/pass
-        IMAGE_TAG  = "${env.BUILD_NUMBER}"
+        NEXUS_CREDENTIALS = credentials('nexus-cred')
+        IMAGE_TAG  = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(7)}"
         BUILD_DIR  = "build/${params.BUILD_TYPE}"
+        CONAN_USER_HOME = "${WORKSPACE}/.conan"
     }
 
     stages {
-        stage('Clone') {
-            steps {
-                echo "Clonando repositório ${params.GITHUB_REPO} (branch ${params.GITHUB_BRANCH})"
-                git branch: "${params.GITHUB_BRANCH}", url: "${params.GITHUB_REPO}"
-            }
-        }
+
+        stage('Checkout') {
+    steps {
+        checkout scm
+    }
+}
 
         stage('Conan Install') {
             steps {
@@ -49,6 +50,31 @@ pipeline {
             }
         }
 
+        stage('Lint (Static Analysis)') {
+            steps {
+                echo "Executando análise estática..."
+                sh "cppcheck . || true"
+            }
+        }
+
+        stage('Package Artifact') {
+            steps {
+                echo "Empacotando artefato..."
+                sh "tar -czf ${params.PROJECT_NAME}.tar.gz ${BUILD_DIR}"
+            }
+        }
+
+        stage('Publish Artifact to Nexus') {
+            steps {
+                echo "Enviando artefato para Nexus..."
+                sh """
+                curl -u ${NEXUS_CREDENTIALS_USR}:${NEXUS_CREDENTIALS_PSW} \
+                --upload-file ${params.PROJECT_NAME}.tar.gz \
+                http://localhost:8081/repository/cpp-releases/${params.PROJECT_NAME}-${IMAGE_TAG}.tar.gz
+                """
+            }
+        }
+
         stage('Docker Login') {
             steps {
                 echo "Logando no registry Docker..."
@@ -59,7 +85,7 @@ pipeline {
         stage('Docker Build & Push') {
             steps {
                 echo "Construindo e enviando imagem Docker..."
-                sh "docker build -t ${params.DOCKER_REGISTRY}/${params.PROJECT_NAME}:${IMAGE_TAG} ."
+                sh "docker build --build-arg BUILD_DIR=${BUILD_DIR} -t ${params.DOCKER_REGISTRY}/${params.PROJECT_NAME}:${IMAGE_TAG} ."
                 sh "docker tag ${params.DOCKER_REGISTRY}/${params.PROJECT_NAME}:${IMAGE_TAG} ${params.DOCKER_REGISTRY}/${params.PROJECT_NAME}:latest"
                 sh "docker push ${params.DOCKER_REGISTRY}/${params.PROJECT_NAME}:${IMAGE_TAG}"
                 sh "docker push ${params.DOCKER_REGISTRY}/${params.PROJECT_NAME}:latest"
@@ -69,17 +95,24 @@ pipeline {
         stage('Kubernetes Deploy') {
             steps {
                 echo "Atualizando deployment Kubernetes com a nova imagem..."
-                sh "kubectl set image deployment/${params.PROJECT_NAME} ${params.PROJECT_NAME}=${params.DOCKER_REGISTRY}/${params.PROJECT_NAME}:${IMAGE_TAG}"
+                sh """
+                kubectl set image deployment/${params.PROJECT_NAME} \
+                ${params.PROJECT_NAME}=${params.DOCKER_REGISTRY}/${params.PROJECT_NAME}:${IMAGE_TAG} --record
+
+                kubectl rollout status deployment/${params.PROJECT_NAME}
+                """
             }
         }
     }
 
     post {
         success {
-            echo "Pipeline concluída! Imagem ${params.PROJECT_NAME}:${IMAGE_TAG} disponível no registry e deploy aplicado."
+            echo "Pipeline concluída! 🚀"
+            echo "Imagem: ${params.DOCKER_REGISTRY}/${params.PROJECT_NAME}:${IMAGE_TAG}"
         }
         failure {
-            echo "Pipeline falhou! Verifique logs, Docker login e Nexus/Kubernetes online."
+            echo "Pipeline falhou! ❌"
+            echo "Verifique logs, Docker login, Nexus e Kubernetes."
         }
     }
 }
