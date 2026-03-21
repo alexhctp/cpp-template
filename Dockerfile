@@ -1,38 +1,29 @@
 FROM ubuntu:24.04
 
-# -----------------------------
-# Dependências de runtime (não build!)
-# -----------------------------
-RUN apt-get update && \
-    apt-get install -y \
-    libstdc++6 \
-    libfmt-dev && \
-    rm -rf /var/lib/apt/lists/*
+# ... (manter as dependências de runtime)
 
 # -----------------------------
-# Argumentos
+# Argumentos (O Jenkins passará o PROJECT_NAME aqui)
 # -----------------------------
-ARG BUILD_DIR
-ARG APP_NAME=app
+ARG BUILD_DIR=build/Release
+ARG PROJECT_NAME=cpp-template
 
-ENV APP_NAME=${APP_NAME}
+# Definimos uma variável de ambiente para o CMD usar
+ENV EXE_NAME=${PROJECT_NAME}
 
-# -----------------------------
-# Diretório de trabalho
-# -----------------------------
 WORKDIR /app
 
 # -----------------------------
-# Copiar binário já buildado
+# Copiar apenas o binário final
 # -----------------------------
-COPY ${BUILD_DIR}/ /app/
+# Como o CMake gera o binário dentro da pasta de build, 
+# vamos copiar o conteúdo da pasta de build para o /app
+COPY ${BUILD_DIR}/${PROJECT_NAME} /app/
 
 # -----------------------------
-# Permissão (caso necessário)
+# Permissão e Execução
 # -----------------------------
-RUN chmod +x /app/${APP_NAME} || true
+RUN chmod +x /app/${EXE_NAME}
 
-# -----------------------------
-# Execução
-# -----------------------------
-CMD ["sh", "-c", "./${APP_NAME}"]
+# Usamos a variável de ambiente para rodar o binário correto
+CMD ./$EXE_NAME
