@@ -9,12 +9,15 @@ pipeline {
     }
 
     environment {
-        // Use apenas uma credencial para simplificar
-        NEXUS_CRED = credentials('nexus-credentials')
-        // Tag padronizada para build e deploy
-        IMAGE_TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(7)}"
-        BUILD_DIR = "build/${params.BUILD_TYPE}"
-    }
+    // Adicionamos o caminho do seu usuário explicitamente no PATH do Jenkins
+    PATH = "/home/alissoneves/.local/bin:/usr/local/bin:/usr/bin:/bin:${env.PATH}"
+    
+    // Credenciais que você já configurou
+    NEXUS_CRED = credentials('nexus-credentials')
+    
+    // Suas outras variáveis de projeto
+    IMAGE_TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(7)}"
+}
 
     stages {
         stage('Checkout') {
