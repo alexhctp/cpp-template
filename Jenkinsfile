@@ -5,8 +5,8 @@ pipeline {
     // 1. Garante que o Jenkins ache o Conan e o CMake
     PATH = "/home/alissoneves/.local/bin:/usr/local/bin:/usr/bin:/bin:${env.PATH}"
     
-    // 2. Nome dinâmico (com o comando sh para pegar o nome da pasta)
-    PROJECT_NAME = "${sh(script: 'basename $(pwd)', returnStdout: true).trim()}"
+    // 2. Nome dinâmico LIMPO (Remove _master e troca _ por -)
+    PROJECT_NAME = "${sh(script: "basename \$(pwd) | sed 's/_master//' | tr '_' '-'", returnStdout: true).trim()}"
     
     // 3. Outras variáveis
     BUILD_DIR = "build/Release"
