@@ -1,14 +1,14 @@
 FROM ubuntu:24.04
 
-RUN apt-get update && apt-get install -y libstdc++6 libfmt-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    libstdc++6 \
+    libfmt-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copia tudo da pasta de build (garanta que o executável está lá)
-COPY build/Release/cpp-template /app/cpp-template
+COPY build/Release/executable /app/executable
 
-# Dá permissão explícita
-RUN chmod +x /app/cpp-template
+RUN chmod +x /app/executable
 
-# Comando direto sem variáveis complexas para testar
 CMD ["/bin/bash", "-c", "/app/executable && sleep infinity"]
