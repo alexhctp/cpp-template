@@ -44,12 +44,19 @@ pipeline {
     steps {
         script {
             def binary = sh(
-                script: "find ${env.BUILD_DIR} -maxdepth 1 -type f ! -name '*_tests' -printf '%f\n' | head -n 1",
+                script: """
+                    for f in ${env.BUILD_DIR}/*; do
+                        if [ -f "$f" ] && [[ "$f" != *"_tests" ]]; then
+                            basename "$f"
+                            break
+                        fi
+                    done
+                """,
                 returnStdout: true
             ).trim()
 
             if (!binary) {
-                sh "ls -la ${env.BUILD_DIR}" // debug
+                sh "ls -la ${env.BUILD_DIR}"
                 error "❌ Nenhum binário encontrado em ${env.BUILD_DIR}"
             }
 
