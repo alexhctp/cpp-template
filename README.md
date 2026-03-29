@@ -93,10 +93,11 @@ Se o seu projeto precisar de outras bibliotecas (como OpenSSL, Boost ou nlohmann
 No CMakeLists.txt (Padrão C++)
 Se você precisar de funcionalidades do C++20 ou C++23, altere a linha set(CMAKE_CXX_STANDARD 17) para a versão desejada.
 
-📂 Estrutura Visual de Dependências do Projeto
-Para facilitar o entendimento de como esses arquivos se conversam, veja o mapa de dependências:
 
-🚨 Solução de Problemas Comuns (Troubleshooting)
+
+
+
+## 🚨 Solução de Problemas Comuns (Troubleshooting)
 Erro conan: not found: Verifique se o binário do Conan está no PATH definido no Jenkinsfile. No Linux, geralmente fica em ~/.local/bin.
 
 Erro 403 Forbidden no Git: Isso ocorre se o seu Jenkins tentar atualizar o status do commit no GitHub sem um Token com permissão de escrita. Você pode ignorar esse erro ou fornecer um Personal Access Token (PAT) com permissões de repo:status.
