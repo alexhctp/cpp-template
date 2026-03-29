@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
-project(cpp-prog1 LANGUAGES CXX)
+project(cpp-template LANGUAGES CXX)
+
+# Permite sobrescrever via linha de comando
+if(NOT DEFINED APP_NAME)
+    set(APP_NAME cpp-app)
+endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
